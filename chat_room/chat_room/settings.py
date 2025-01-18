@@ -11,7 +11,7 @@ SECRET_KEY = 'django-insecure-b^#0box8d(*-1z^5ftq=)em5%w1hebjq%*1)i3g-7q42ln#)ut
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -147,7 +147,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
-SITE_ID = 15
+SITE_ID = 14
 LOGIN_REDIRECT_URL = "/"
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
