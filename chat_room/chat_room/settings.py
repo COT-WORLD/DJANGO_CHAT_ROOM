@@ -6,17 +6,14 @@ import dj_database_url
 load_dotenv()
 
 DATABASE_URL = os.getenv('DATABASE_URL')
+
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = 'django-insecure-b^#0box8d(*-1z^5ftq=)em5%w1hebjq%*1)i3g-7q42ln#)ut'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-DEBUG = True
-
-ALLOWED_HOSTS = ["*"]
-
-
-# Application definition
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+ 
+DEBUG = bool(os.environ.get("DEBUG", default=0))
+ 
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
 
 INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
@@ -75,22 +72,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'chat_room.wsgi.application'
 
+DATABASES = {'default': dj_database_url.parse(os.getenv("EXTERNAL_DATABASE_URL"))}
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / 'db.sqlite3',
-    # }
-   
-   'default': dj_database_url.parse(os.getenv("EXTERNAL_DATABASE_URL"))
-}
-
-
-# Password validation
-# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -108,9 +91,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.0/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -118,10 +98,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS=[ os.path.join(BASE_DIR, "static")]

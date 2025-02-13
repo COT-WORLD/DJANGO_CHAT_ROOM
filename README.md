@@ -23,7 +23,31 @@ This is a Django-based web application designed to [briefly describe the purpose
 
 ## Installation
 
-### Prerequisites
+### Option 1
+
+#### Prerequisites for Docker
+
+Ensure you have the following installed:
+- Docker
+
+### Steps
+
+1. Clone the repository:
+```bash
+git clone https://github.com/COT-WORLD/DJANGO_CHAT_ROOM.git
+cd DJANGO_CHAT_ROOM
+```
+
+2. Rename .env.sample file to .env.
+
+3. Run below Docker compose command and then go to [Configuration](#configuration)  :
+```bash
+docker compose up
+```
+
+### Option 2
+
+#### Prerequisites for local
 
 Ensure you have the following installed:
 - Python 3.x
