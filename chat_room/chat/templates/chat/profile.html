@@ -4,7 +4,7 @@
 <div class="container-fluid main-container">
   <div class="row">
 
-    {% include 'chat/topics_component_new.html' %}
+    {% include 'chat/topics_component.html' %}
 
     <div class="col-md-7 chat-room-main">
       <div class="chat-room-main-header">
@@ -30,11 +30,11 @@
       <div>
         <p>CHAT ROOMS HOSTED BY {{user.first_name|upper}}</p>
       </div>
-      {% include 'chat/feed_component_new.html'%}
+      {% include 'chat/feed_component.html'%}
     </div>
 
     <div class="col-md-3 recent-activities-sidebar">
-      {% include 'chat/activity_component_new.html'%}
+      {% include 'chat/activity_component.html'%}
 
     </div>
   </div>
