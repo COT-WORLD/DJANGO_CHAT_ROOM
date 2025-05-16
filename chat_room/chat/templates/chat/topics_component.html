@@ -1,22 +1,14 @@
-<div class="topics">
-  <div class="topics__header">
-    <h2>Browse Topics</h2>
-  </div>
-  <ul class="topics__list">
-    <li>
-      <a href="{% url 'home'%}" class="active">All <span>{{topics_count}}</span></a>
-    </li>
-    {%for topic in topics%}
-    <li>
-      <a href="{% url 'home'%}?q={{topic.name}}">{{topic.name}} <span>{{topic.room_set.all.count}}</span></a>
-    </li>
-    {%endfor%}
-  </ul>
-  <a class="btn btn--link" href="{% url 'topics' %}">
-    More
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-      <title>chevron-down</title>
-      <path d="M16 21l-13-13h-3l16 16 16-16h-3l-13 13z"></path>
-    </svg>
-  </a>
+<div class="col-md-2 topics-sidebar">
+    <h5>Browse Topics</h5>
+    <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{% url 'topics'%}">All </a> <span class="badge rounded-pill">{{topics_count}}</span>
+        </li>
+        {%for topic in topics%}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{% url 'home'%}?q={{topic.name}}">{{topic.name}}</a> <span class="badge rounded-pill">{{topic.room_count}}</span>
+        </li>
+        {%endfor%}
+    </ul>
+    <a href="{% url 'topics' %}" class="more-link mt-2 d-block">More <i class="fas fa-chevron-down fa-xs"></i></a>
 </div>

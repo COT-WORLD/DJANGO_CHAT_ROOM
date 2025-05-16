@@ -1,146 +1,165 @@
 # DJANGO_CHAT_ROOM
 
-This is a Django-based web application designed to [briefly describe the purpose of the app, e.g., manage a blog, track projects, etc.].
+**Django Chat Room** is a real-time web application that allows users to create and join topic-based study rooms, engage in threaded conversations, and manage personalized user profiles. It features user authentication, including Google SSO integration, responsive design, and activity tracking to enhance collaboration and communication.
 
 ## Table of Contents
 
 - [Features](#features)
 - [Installation](#installation)
 - [Configuration](#configuration)
+- [Google SSO & Superuser Automation](#google-sso--superuser-automation)
+- [Production Gzip Compression](#production-gzip-compression)
 - [Errors](#errors)
 - [Contributing](#contributing)
 
+---
+
 ## Features
 
-- Create study rooms: Users can create study rooms with specific topics.
-- Join study rooms: Users can join study rooms created by other users.
-- Chat within study rooms: Users can chat with other users in the study rooms they have joined.
-- User profiles: Users can create profiles with information such as their name, bio, and profile picture.
-- Authentication: Users can register and log in to the application.
-- Search functionality: Users can search for study rooms by topic.
-- Activity feed: The application displays recent activity in study rooms, such as new messages and replies.
-- SSO(Signle Sign On)- The application has SSO for Google.
+- **Create Study Rooms**: Users can create study rooms around specific topics.
+- **Join & Chat**: Users can join rooms and participate in real-time chat.
+- **User Profiles**: Each user has a personalized profile with an avatar, name, and bio.
+- **Authentication System**: Full authentication support including Sign Up, Login, and Logout functionalities.
+- **Google SSO**: Seamless Google Single Sign-On (SSO) integration for quick registration and login.
+- **Activity Feed**: View recent updates in rooms, such as new messages and activities.
+- **Room Search**: Easily find study rooms by searching for topics.
+- **Automated Setup**: Google OAuth app and superuser account are auto-setup using Django signals.
+
+---
 
 ## Installation
 
-### Option 1
+### Option 1: Docker Setup
 
-#### Prerequisites for Docker
+#### Prerequisites
 
-Ensure you have the following installed:
 - Docker
 
-### Steps
+#### Steps
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/COT-WORLD/DJANGO_CHAT_ROOM.git
 cd DJANGO_CHAT_ROOM
 ```
 
-2. Rename .env.sample file to .env.
+2. Rename .env.sample to .env and configure environment variables (see Configuration).
 
-3. Run below Docker compose command and then go to [Configuration](#configuration)  :
+3. Run the project:
+
 ```bash
 docker compose up
 ```
 
-### Option 2
+**Option 2: Local Development Setup**
 
-#### Prerequisites for local
+**Prerequisites**
 
-Ensure you have the following installed:
 - Python 3.x
-- Django 3.x or newer
-- PostgreSQL (or any other DB backend used)
+- PostgreSQL or supported DB
+- pip
 
-### Steps
+**Steps**
 
-1. Set up a virtual environment:
+1. Create and activate virtual environment:
 
 ```bash
-Copy code
 python3 -m venv venv
 source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 ```
+
 2. Clone the repository:
+
 ```bash
 git clone https://github.com/COT-WORLD/DJANGO_CHAT_ROOM.git
 cd DJANGO_CHAT_ROOM
 ```
-3. Set-up-the-environment-variables
-Create .env file in root of django project and then three environment variables.
+
+3. Create a .env file in the project root:
+
 ```bash
-EXTERNAL_DATABASE_URL="postgres://<username>:<password>@<host>:<port>/<database>"
-Client_ID="Google API OAUTH Client ID"
-Client_secret="Google API OAUTH Client SECRET"
+EXTERNAL_DATABASE_URL=postgres://<username>:<password>@<host>:<port>/<database>
+CLIENT_ID=your_google_client_id_here
+CLIENT_SECRET=your_google_client_secret_here
+DJANGO_SUPER_USER_USERNAME=admin_username
+DJANGO_SUPER_USER_EMAIL=admin@example.com
+DJANGO_SUPER_USER_PASSWORD=securepassword123
 ```
 
-3. Install required dependencies:
+4. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
-4. Once you have setup database then Apply migrations, create superuser and runserver.
 
-```bash 
+5. Collect static files, apply migrations, and run the server:
+
+```bash
+python manage.py collectstatic
 python manage.py migrate
-python manage.py createsuperuser
 python manage.py runserver
 ```
+
 ## Configuration
-Access the Admin Panel
-Once the server is running, you can access the Django Admin Panel by navigating to:
-```bash
-http://127.0.0.1:8000/admin/
-```
-Create site in site model through django-admin and set data as below:
-```bash
-Domain Name: http://127.0.0.1:8000
-Display Name: http://127.0.0.1:8000
-```
-Now goto Social accounts model and one social applications where set data as below:
+
+Make sure your .env file includes the following variables:
 
 ```bash
-Provider: Google
-Name: google
-Client Id: from env file
-Client secret: from env file
-Sites: http://127.0.0.1:8000 to chosen sites which is always empty unless you add something.
+EXTERNAL_DATABASE_URL=postgres://user:pass@host:port/db
+CLIENT_ID=google-oauth-client-id
+CLIENT_SECRET=google-oauth-client-secret
+DJANGO_SUPER_USER_USERNAME=admin_username
+DJANGO_SUPER_USER_EMAIL=admin@example.com
+DJANGO_SUPER_USER_PASSWORD=yourpassword
 ```
+
+These environment variables allow:
+
+    Automatic creation of the Google social app
+
+    Auto-creation of a Django superuser during initial migrations
+
+## Google SSO & Superuser Automation
+
+Google Single Sign-On is integrated via django-allauth. You only need to set the Google CLIENT_ID and CLIENT_SECRET in your .env file.
+
+On the first run after migrations:
+
+A Site instance will be created (or reused)
+
+A SocialApp for Google will be auto-configured and linked to the site
+
+A superuser will be created with credentials from the .env file
+
+This is done using Django’s post_migrate signal.
+
+## Production Gzip Compression
+
+To optimize static files for production, the project uses WhiteNoise with Gzip support.
+
+Key settings in settings.py:
+
+```bash
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    ...
+]
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+```
+
+This ensures all static assets like CSS/JS are served compressed with .gz and .br versions.
+
 ## Errors
-Fixing the SITE_ID Error in Django
-If you're encountering a SITE_ID error, it usually means the site ID isn't properly set in your Django settings. Here's how to resolve it:
 
-Find the Correct SITE_ID:
+If you run into issues like:
 
-Go to the Django admin interface: 
-```bash 
-http://127.0.0.1:8000/admin/.
-```
-Under the Sites section, find your site and note the ID in the URL, e.g., 
-```bash
-http://127.0.0.1:8000/admin/sites/site/15/change/ 
-```
-here, 15 is the SITE_ID.
-Update settings.py:
+Site matching query does not exist: Make sure SITE_ID matches the ID of the auto-created site.
 
-In your settings.py, set the correct SITE_ID:
-```bash
-SITE_ID = 15
-```
-Restart the Server:
-Save the changes and restart your Django development server:
-```bash
-python manage.py runserver
-```
+Google SocialApp not found: Double-check your .env values for CLIENT_ID and CLIENT_SECRET.
+
 ## Contributing
 
-Contributions are welcome! Please follow these steps to contribute:
-
-Fork the repository.
-Create a new branch (git checkout -b feature-branch).
-Commit your changes (git commit -m 'Add feature').
-Push to the branch (git push origin feature-branch).
-Create a pull request with a description of your changes.
-
+Feel free to fork and submit pull requests. If you'd like to collaborate, open an issue to discuss your feature idea or bug fix.

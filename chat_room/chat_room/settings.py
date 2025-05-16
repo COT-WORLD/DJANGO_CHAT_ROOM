@@ -10,10 +10,10 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
- 
+
 DEBUG = bool(os.environ.get("DEBUG", default=0))
- 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
+
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 
 INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
@@ -32,21 +32,24 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'debug_toolbar',
 ]
 
 AUTH_USER_MODEL = 'chat.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-     "allauth.account.middleware.AccountMiddleware",
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'chat_room.urls'
@@ -61,7 +64,6 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
-                'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.request',
@@ -72,7 +74,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'chat_room.wsgi.application'
 
-DATABASES = {'default': dj_database_url.parse(os.getenv("EXTERNAL_DATABASE_URL"))}
+DATABASES = {'default': dj_database_url.parse(
+    os.getenv("EXTERNAL_DATABASE_URL"))}
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -100,10 +103,9 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS=[ os.path.join(BASE_DIR, "static")]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-
 
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -111,7 +113,7 @@ MEDIA_URL = "/media/"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS =True
+CORS_ALLOW_ALL_ORIGINS = True
 # CORS_ALLOWED_ORIGINS = [
 #     "https://example.com",
 #     "https://sub.example.com",
@@ -123,7 +125,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
-SITE_ID = 14
+SITE_ID = 1
 LOGIN_REDIRECT_URL = "/"
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
@@ -132,3 +134,10 @@ ACCOUNT_SESSION_REMEMBER = False
 ACCOUNT_FORMS = {'login': 'chat.forms.MyCustomLoginForm'}
 ACCOUNT_FORMS = {'signup': 'chat.forms.MyCustomSignupForm'}
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+    "localhost",
+]

@@ -1,41 +1,52 @@
 {%extends 'main.html'%}
 {%block content%}
-    <main class="layout">
-        <div class="container">
-            <div class="layout__box_update_user">
-                <div class="layout__boxHeader">
-                    <div class="layout__boxTitle">
-                        <a href="{% url 'home' %}">
-                            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32"
-                                viewBox="0 0 32 32">
-                                <title>arrow-left</title>
-                                <path
-                                    d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z">
-                                </path>
-                            </svg>
-                        </a>
-                        <h3>Edit your profile</h3>
-                    </div>
-                </div>
-                <div class="layout__body">
-                    <form class="form" action="" method="post" enctype="multipart/form-data">
-                      {% csrf_token %}
-                      {{ form.non_field_errors }}
-                      {% for field in form %}
-                        <div class="form__group">
-                            <label for="profile_pic">{{field.name}}</label>
-                            {{field}}
-                            {{ field.errors }}
-                        </div>
-                        {%endfor%}
-                        <div class="form__action">
-                            <a class="btn btn--dark" href="{{request.META.HTTP_REFERER}}">Cancel</a>
-                            <button class="btn btn--main" type="submit">Update</button>
-                        </div>
-                    </form>
-                </div>
+<div class="login-page">
+    <div class="login-container">
+        <h2 class="login-header d-flex align-items-center justify-content-center position-relative">
+            <a href="{% url 'home' %}" class="position-absolute start-0">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            Edit your profile
+        </h2>
+        <form class="form" action="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="form-group">
+                <label for="first_name">First Name</label>
+                <input type="text" name="first_name" class="form-control" id="first_name" placeholder="First Name"
+                    value="{{ form.first_name.value|default_if_none:'' }}">
+                {{ form.first_name.errors }}
             </div>
-        </div>
-      </div>
-    </main>
+            <div class="form-group">
+                <label for="last_name">Last Name</label>
+                <input type="text" name="last_name" class="form-control" id="last_name" placeholder="Last Name"
+                    value="{{ form.last_name.value|default_if_none:'' }}">
+                {{ form.last_name.errors }}
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" name="email" class="form-control" id="email" placeholder="Email"
+                    value="{{ form.email.value|default_if_none:'' }}">
+                {{ form.email.errors }}
+            </div>
+            <div class="form-group">
+                <label for="bio">Bio</label>
+                <input type="text" name="bio" class="form-control" id="bio" placeholder="Bio"
+                    value="{{ form.bio.value|default_if_none:'' }}">
+                {{ form.bio.errors }}
+            </div>
+            <div class="form-group">
+                {% if request.user.avatar %}
+                    <img src="{{ request.user.avatar.url }}" alt="Avatar" class="img-thumbnail mb-2" style="width: 120px; height: 120px; border-radius: 50%;">
+                {% endif %}
+                <label for="avatar">Avatar</label>
+                <input type="file" name="avatar" class="form-control" id="avatar"/>
+                {{ form.avatar.errors }}
+            </div>
+            <button type="submit" class="btn-login">
+                <i class="fas fa-pen"></i> Update
+            </button>
+        </form>
+    </div>
+</div>
 {%endblock%}

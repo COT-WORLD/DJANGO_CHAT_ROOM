@@ -5,45 +5,89 @@ from django.contrib.auth import logout
 from django.db.models import Q
 from .models import Room, Topic, Message, User
 from .forms import RoomForm, UserForm
-from django.views.generic import ListView, View, DeleteView
+from django.views.generic import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
+from django.db.models import Count
 
-class HomePageListView(ListView):
-    template_name = "chat/home.html"
-    model = Room
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        q = self.request.GET.get(
-            "q") if self.request.GET.get("q") != None else ""
-        context["rooms"] = Room.objects.filter(Q(topic__name__icontains=q) | Q(
-            name__icontains=q) | Q(description__icontains=q))
-        context["topics"] = Topic.objects.all()[0:5]
-        context["topics_count"] = Topic.objects.all().count()
-        context["room_messages"] = Message.objects.filter(
-            Q(room__topic__name__icontains=q))
-        return context
+from django.db.models import Count, Prefetch
+from chat.models import Room, Topic, Message, User
 
-class RoomPageView(View):
-    model = Room
-    template_name = "chat/room.html"
 
-    def get(self, request, pk):
-        room = Room.objects.get(id=pk)
-        messages = room.message_set.all()
-        participants = room.participants.all()
-        return render(request, "chat/room.html", {"room": room, "messages": messages, "participants": participants})
+def home_view(request):
+    q = request.GET.get('q', '').strip()
 
-    def post(self, request, pk):
-        room = Room.objects.get(id=pk)
-        message = Message.objects.create(
-            user=request.user,
-            room=room,
-            body=request.POST.get('body')
+    rooms = (
+        Room.objects
+        .filter(
+            Q(topic__name__icontains=q) |
+            Q(name__icontains=q) |
+            Q(description__icontains=q)
         )
-        room.participants.add(request.user)
-        return redirect("room", pk=room.id)
+        .select_related('topic', 'host')
+        .prefetch_related(
+            Prefetch('participants', queryset=User.objects.only('id', 'username'))
+        )
+        .annotate(participant_count=Count('participants'))
+        .only('id', 'name', 'description', 'topic_id', 'host_id', 'created_at').order_by('-created_at')[:8]
+    )
+
+    topics = (
+        Topic.objects
+        .annotate(room_count=Count('room'))
+        .order_by('-room_count')[:5]
+    )
+
+    topics_count = Topic.objects.count()
+    room_messages = (
+        Message.objects
+        .filter(Q(room__topic__name__icontains=q))
+        .select_related('room', 'room__topic', 'user')
+        .only('id', 'body', 'room_id', 'user_id', 'created_at')[:8]
+    )
+
+    context = {
+        'rooms': rooms,
+        'topics': topics,
+        'topics_count': topics_count,
+        'room_messages': room_messages,
+    }
+    return render(request, 'chat/home.html', context)
+
+
+@login_required(login_url='account_login')
+def room_view(request, pk):
+    room = get_object_or_404(Room, id=pk)
+
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            body = request.POST.get('body')
+            if body:
+                Message.objects.create(
+                    user=request.user,
+                    room=room,
+                    body=body
+                )
+                room.participants.add(request.user)
+            return redirect('room', pk=room.id)
+
+    # Optimize message query
+    messages = room.message_set.select_related(
+        'user').all().order_by('created_at')
+
+    # This is correct for ManyToMany fields, including avatar usage
+    participants = room.participants.all()
+
+    return render(request, 'chat/room.html', {
+        'room': room,
+        'messages': messages,
+        'participants': participants
+    })
+
 
 class CreateRoom(LoginRequiredMixin, View):
     model = Topic
@@ -67,6 +111,7 @@ class CreateRoom(LoginRequiredMixin, View):
         )
         return redirect("home")
 
+
 class UpdateRoomView(LoginRequiredMixin, View):
     template_name = "chat/room_form.html"
     login_url = reverse_lazy('account_login')
@@ -75,7 +120,7 @@ class UpdateRoomView(LoginRequiredMixin, View):
     def get(self, request, **kwargs):
         room = Room.objects.get(id=self.kwargs['pk'])
         if request.user != room.host:
-            return HttpResponseForbidden("You aren't allowed here!")
+            return HttpResponseForbidden("You aren't allowed to perform this operation!")
         topics = Topic.objects.all()
         form = RoomForm(instance=room)
         return render(request, self.template_name, {"form": form, "topics": topics, 'room': room})
@@ -83,93 +128,89 @@ class UpdateRoomView(LoginRequiredMixin, View):
     def post(self, request, **kwargs):
         room = Room.objects.get(id=self.kwargs['pk'])
         if request.user != room.host:
-            return HttpResponseForbidden("You aren't allowed here!")
+            return HttpResponseForbidden("You aren't allowed to perform this operation!")
         topic, created = Topic.objects.get_or_create(
             name=request.POST.get('topic'))
         room.name = request.POST.get('name')
         room.topic = topic
         room.description = request.POST.get('description')
+        # exit()
         room.save()
         return redirect(self.success_url)
 
-class DeleteRoomView(LoginRequiredMixin, DeleteView):
-    model = Room
-    template_name = "chat/delete.html"
-    context_object_name = "obj"
-    success_url = "/"
-    login_url = reverse_lazy('account_login')
 
-    def delete(self, request):
-        if self.get_object().host == request.user:
-            self.get_object().delete()
-            return redirect(self.success_url)
-        else:
-            HttpResponseForbidden("Can't delete other's room")
+@login_required(login_url='account_login')
+def delete_room(request, pk):
+    room = get_object_or_404(Room, id=pk)
+    if request.user != room.host:
+        return HttpResponseForbidden("Cannot delete someone else's room")
 
-class DeleteMessageView(LoginRequiredMixin, DeleteView):
-    model = Message
-    template_name = "chat/delete.html"
-    context_object_name = "obj"
-    success_url = "/"
-    login_url = reverse_lazy('account_login')
+    if request.method == "POST":
+        room.delete()
+        return redirect('home')
 
-    def delete(self, request):
-        if self.get_object().user == request.user:
-            self.get_object().delete()
-            return redirect(self.success_url)
-        else:
-            return HttpResponseForbidden("Cannot delete other's message")
 
-class UserProfileListView(LoginRequiredMixin, ListView):
-    model = User
-    template_name = "chat/profile.html"
-    login_url = reverse_lazy('account_login')
+@login_required(login_url='account_login')
+def delete_message(request, pk):
+    message = get_object_or_404(Message, id=pk)
+    if request.user != message.user:
+        return HttpResponseForbidden("Cannot delete someone else's message")
 
-    def get_context_data(self, **kwargs):
-        context = super(UserProfileListView, self).get_context_data(**kwargs)
-        user = User.objects.get(id=self.kwargs['pk'])
-        context["user"] = user
-        context["room_messages"] = user.message_set.all()
-        context["rooms"] = user.room_set.all()
-        context["topics"] = Topic.objects.all()[0:5]
-        context["topics_count"] = Topic.objects.all().count()
-        return context
+    if request.method == "POST":
+        room_id = message.room.id
+        message.delete()
+        return redirect('room', pk=room_id)
 
-class UpdateUser(LoginRequiredMixin, View):
-    template_name = "chat/update-user.html"
-    login_url = reverse_lazy('account_login')
 
-    def get(self, request):
-        user = request.user
-        form = UserForm(instance=user)
-        return render(request, self.template_name, {"form": form})
+@login_required(login_url='account_login')
+def user_profile_view(request, pk):
+    user = get_object_or_404(
+        User.objects.prefetch_related(
+            Prefetch('message_set',
+                     queryset=Message.objects.select_related('room')),
+            Prefetch('room_set', queryset=Room.objects.select_related('topic'))
+        ),
+        id=pk
+    )
 
-    def post(self, request):
-        user = request.user
+    context = {
+        'user': user,
+        'room_messages': user.message_set.all()[:8],
+        'rooms': user.room_set.annotate(participant_count=Count('participants')),
+        'topics': Topic.objects.annotate(room_count=Count('room')).all()[:5],
+        'topics_count': Topic.objects.count()
+    }
+    return render(request, 'chat/profile.html', context)
+
+
+@login_required(login_url='account_login')
+def update_user(request):
+    user = request.user
+    if request.method == "POST":
         form = UserForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
-            return redirect("user-profile", pk=user.id)
-        else:
-            for error in form.errors:
-                messages.error(request, form.errors[error])
-            return redirect(request.path, messages)
+            return redirect('user-profile', pk=user.id)
+        for error in form.errors:
+            messages.error(request, form.errors[error])
+        return redirect(request.path)
+    else:
+        form = UserForm(instance=user)
+    return render(request, 'chat/update-user.html', {'form': form})
 
-class TopicsPage(ListView):
-    template_name = "chat/topics.html"
-    context_object_name = "topics"
 
-    def get_queryset(self):
-        self.topics = self.request.GET.get(
-            "q") if self.request.GET.get("q") != None else ""
-        return Topic.objects.filter(name__icontains=self.topics)
+def topics_page(request):
+    q = request.GET.get("q", "")
+    topics = Topic.objects.filter(name__icontains=q).annotate(
+        room_count=Count('room')).order_by('-room_count')
+    return render(request, "chat/topics.html", {"topics": topics})
 
-class ActivityPage(ListView):
-    model = Message
-    template_name = "chat/activity.html"
-    context_object_name = "room_messages"
 
-class LogoutUser(View):
-    def get(self, request):
-        logout(request)
-        return redirect('home')
+def activity_page(request):
+    room_messages = Message.objects.select_related('room', 'user').all()
+    return render(request, 'chat/activity.html', {'room_messages': room_messages})
+
+
+def logout_user(request):
+    logout(request)
+    return redirect('home')

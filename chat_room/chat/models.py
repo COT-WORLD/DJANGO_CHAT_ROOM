@@ -15,6 +15,11 @@ class Topic(models.Model):
     created_at = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['name']),
+        ]
+
     def __str__(self):
         return self.name
 
@@ -30,6 +35,11 @@ class Room(models.Model):
 
     class Meta:
         ordering = ["-updated_at", "-created_at"]
+        indexes = [
+            models.Index(fields=['topic']),
+            models.Index(fields=['name']),
+            models.Index(fields=['description']),
+        ]
 
     def __str__(self):
         return self.name
@@ -44,6 +54,10 @@ class Message(models.Model):
 
     class Meta:
         ordering = ["-updated_at", "-created_at"]
+        indexes = [
+            models.Index(fields=['room_id']),
+            models.Index(fields=['created_at']),
+        ]
 
     def __str__(self) -> str:
         return self.body[0:50]

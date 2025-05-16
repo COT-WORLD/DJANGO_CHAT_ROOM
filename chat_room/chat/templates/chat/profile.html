@@ -1,45 +1,42 @@
-{% extends 'main.html'%}
+{%extends 'main.html'%}
 {% load static %}
 {% block content%}
-  <main class="profile-page layout layout--3">
-    <div class="container">
-      {% include 'chat/topics_component.html'%}
-      <div class="roomList">
-        <div class="profile">
-          <div class="profile__avatar">
-            <div class="avatar avatar--large active">
-              <img src="{% if user.avatar %} {{user.avatar.url}} {% else %} {% static 'images/avatar.svg' %} {% endif %}"/>
-            </div>
-          </div>
-          <div class="profile__info">
-            {% if user.first_name %}
-            <h3>{{user.first_name}}</h3>
-            <p>@{{user.first_name}}</p>
-            {% else %}
-            <h3>{{user.username}}</h3>
-            <p>@{{user.username}}</p>
-            {% endif %}
-            {% if request.user == user%}
-            <a href="{% url 'update-user' %}" class="btn btn--main btn--pill">Edit Profile</a>
-            {%endif%}
-          </div>
-          <div class="profile__about">
-            <h3>About</h3>
-            <p>
-              {{user.bio}}
-            </p>
-          </div>
-        </div>
+<div class="container-fluid main-container">
+  <div class="row">
 
-        <div class="roomList__header">
-          <div>
-            <h2>Chat Rooms Hosted by {{user.first_name}}</a>
-            </h2>
-          </div>
+    {% include 'chat/topics_component_new.html' %}
+
+    <div class="col-md-7 chat-room-main">
+      <div class="chat-room-main-header">
+        <div class="profile-container">
+            <div class="avatar-wrapper">
+              <img class="user-avatar" src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'images/avatar.svg' %}{% endif %}" alt="User Avatar"  />
+            </div>
+            <div class="text-container">
+              {% if user.first_name %}
+                <div class="name-text">{{user.first_name}}</div>
+                <div class="user-tag">@{{user.first_name}}</div>
+              {% else %}
+                <div class="name-text">{{user.username}}</div>
+                <div class="user-tag">@{{user.username}}</div>
+              {% endif %}
+            </div>
+            {% if request.user == user%}
+            <a href="{% url 'update-user' %}" class="edit-profile-button">Edit Profile</a>
+            {%endif%}
         </div>
-        {% include 'chat/feed_component.html'%}
+        
       </div>
-      {% include 'chat/activity_component.html'%}
+      <div>
+        <p>CHAT ROOMS HOSTED BY {{user.first_name|upper}}</p>
+      </div>
+      {% include 'chat/feed_component_new.html'%}
     </div>
-  </main>
-{% endblock content%}
+
+    <div class="col-md-3 recent-activities-sidebar">
+      {% include 'chat/activity_component_new.html'%}
+
+    </div>
+  </div>
+</div>
+{%endblock%}

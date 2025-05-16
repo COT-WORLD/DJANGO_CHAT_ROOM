@@ -1,53 +1,34 @@
 {%extends 'main.html'%}
 {% load i18n allauth account socialaccount static %}
 {% block content %}
-<div class="container">
-  <div class="layout__box_login">
-    <div class="layout__boxHeader">
-      <div class="layout__boxTitle">
-        <h3>LOGIN</h3>
-      </div>
+<div class="login-page">
+    <div class="login-container">
+        <h2 class="login-header">Login</h2>
+        <form action="{% url 'account_login' %}" method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" name="login" class="form-control" id="email" placeholder="Email address">
+                {{ form.login.errors }}
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" class="form-control" id="password" placeholder="Password">
+                {{ form.password.errors }}
+            </div>
+            <button type="submit" class="btn-login">
+               <i class="fas fa-lock"></i>
+                Login
+            </button>
+
+            <a class="google-login-btn" href="{% provider_login_url 'google' %}"> <img
+                    src="{% static 'images/icons/google.svg' %}" alt="Google">Sign in with Google
+            </a>
+        </form>
+        <p style="text-align: center; margin-top: 1rem; color: #adb5bd;">Haven't signed up yet? <a class="signup-link"
+                href="{{ signup_url }}">Sign Up</a></p>
     </div>
-    <div class="layout__body">
-      <h2 class="auth__tagline">Find your chatting partner</h2>
-
-      <form class="form" action="" method="post">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        {%for field in form %}
-        <div class="form__group form__group">
-          <label for="room_name">{{field.label}}</label>
-          {{field}}
-          {{ field.errors }}
-        </div>
-        {%endfor%}
-        {% if error %}
-        <h4 style="color: red;">{{error}}</h4>
-        {% endif %}
-
-        <button class="btn btn--main" type="submit">
-          <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-            <title>lock</title>
-            <path
-              d="M27 12h-1v-2c0-5.514-4.486-10-10-10s-10 4.486-10 10v2h-1c-0.553 0-1 0.447-1 1v18c0 0.553 0.447 1 1 1h22c0.553 0 1-0.447 1-1v-18c0-0.553-0.447-1-1-1zM8 10c0-4.411 3.589-8 8-8s8 3.589 8 8v2h-16v-2zM26 30h-20v-16h20v16z">
-            </path>
-            <path
-              d="M15 21.694v4.306h2v-4.306c0.587-0.348 1-0.961 1-1.694 0-1.105-0.895-2-2-2s-2 0.895-2 2c0 0.732 0.413 1.345 1 1.694z">
-            </path>
-          </svg>
-
-          Login
-        </button>
-      </form>
-      
-      <a style="margin-top: 10px;" href="{% provider_login_url 'google' %}"> <img
-          src="{% static 'images/icons/google_icon.svg' %}" alt="Google"></a>
-      <div class="auth__action">
-        <p>Haven't signed up yet?</p>
-        <a href="{{ signup_url }}" class="btn btn--link">Sign Up</a>
-      </div>
-    </div>
-  </div>
 </div>
 
 {% endblock content %}
