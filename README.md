@@ -2,6 +2,21 @@
 
 **Django Chat Room** is a real-time web application that allows users to create and join topic-based study rooms, engage in threaded conversations, and manage personalized user profiles. It features user authentication, including Google SSO integration, responsive design, and activity tracking to enhance collaboration and communication.
 
+## Website Link
+
+You can access the website at the following link:
+
+[CHAT-ROOM](https://django-chat-room.onrender.com/)
+
+## Login Details
+
+For testing purposes, you can use the following credentials to log in:
+
+- **Email**: `jasmine@gmail.com`
+- **Password**: `password123`
+
+> Note: These credentials are for demo/testing purposes only.
+
 ## Table of Contents
 
 - [Features](#features)
