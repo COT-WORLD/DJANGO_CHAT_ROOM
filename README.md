@@ -1,6 +1,6 @@
 # DJANGO_CHAT_ROOM
 
-**Django Chat Room** is a real-time web application that allows users to create and join topic-based study rooms, engage in threaded conversations, and manage personalized user profiles. It features user authentication, including Google SSO integration, responsive design, and activity tracking to enhance collaboration and communication.
+**Django Chat Room** is a real-time web application that allows users to create and join topic-based study rooms, engage in threaded conversations, and manage personalized user profiles. It features user authentication, including Google SSO integration, responsive design, and activity tracking to enhance collaboration and communication.On Render's free deployment, the application runs faster due to query optimization with **Django Debug Toolbar**. Despite slow database connections, the website remains highly responsive and performs well, providing a smooth experience for users.
 
 ## Website Link
 
