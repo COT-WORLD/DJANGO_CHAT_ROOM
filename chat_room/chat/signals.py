@@ -37,9 +37,6 @@ def setup_google_social_app_and_superuser():
         defaults={"domain": domain, "name": "Localhost"}
     )
 
-    if not settings.SOCIALACCOUNT_PROVIDERS.get("google"):
-        return
-
     existing_apps = SocialApp.objects.filter(provider="google", sites=site)
     if existing_apps.exists():
         return
