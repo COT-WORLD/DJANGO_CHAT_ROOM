@@ -8,6 +8,9 @@ You can access the website at the following link:
 
 [CHAT-ROOM](https://django-chat-room.onrender.com/)
 
+**Important Note:**  
+Please note that this app is deployed on Render's free hosting plan. As part of Render's free tier, this instance will "spin down" during periods of inactivity. This can lead to a delay of 50 seconds or more when making the first request after a period of inactivity. This delay is specific to Render's infrastructure and **not** due to any issues with the code or application itself.
+
 ## Login Details
 
 For testing purposes, you can use the following credentials to log in:
