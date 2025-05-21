@@ -12,10 +12,9 @@ from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.db.models import Count
-
-
 from django.db.models import Count, Prefetch
 from chat.models import Room, Topic, Message, User
+import bleach
 
 
 def home_view(request):
@@ -67,19 +66,22 @@ def room_view(request, pk):
         if request.user.is_authenticated:
             body = request.POST.get('body')
             if body:
+                allowed_tags = ['p', 'b', 'i', 'ul',
+                                'ol', 'li', 'a', 'strong', 'em']
+                allowed_attrs = {'a': ['href', 'title', 'rel']}
+                sanitized_body = bleach.clean(
+                    body, tags=allowed_tags, attributes=allowed_attrs)
                 Message.objects.create(
                     user=request.user,
                     room=room,
-                    body=body
+                    body=sanitized_body
                 )
                 room.participants.add(request.user)
             return redirect('room', pk=room.id)
 
-    # Optimize message query
     messages = room.message_set.select_related(
         'user').all().order_by('created_at')
 
-    # This is correct for ManyToMany fields, including avatar usage
     participants = room.participants.all()
 
     return render(request, 'chat/room.html', {
@@ -191,9 +193,12 @@ def update_user(request):
         if form.is_valid():
             form.save()
             return redirect('user-profile', pk=user.id)
-        for error in form.errors:
-            messages.error(request, form.errors[error])
-        return redirect(request.path)
+
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+            return render(request, 'chat/update-user.html', {'form': form})
     else:
         form = UserForm(instance=user)
     return render(request, 'chat/update-user.html', {'form': form})

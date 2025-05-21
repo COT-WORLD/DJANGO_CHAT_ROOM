@@ -2,6 +2,8 @@ from django.forms import ModelForm
 from .models import Room, User
 from django import forms
 from allauth.account.forms import SignupForm, LoginForm
+from django.core.exceptions import ValidationError
+import bleach
 
 
 class MyCustomSignupForm(SignupForm):
@@ -29,8 +31,39 @@ class RoomForm(ModelForm):
         fields = "__all__"
         exclude = ['host', 'participants']
 
+    def clean_description(self):
+        description = self.cleaned_data.get('description', '')
+
+        allowed_tags = ['p', 'b', 'i', 'ul', 'ol', 'li', 'a', 'strong', 'em']
+        allowed_attrs = {'a': ['href', 'title', 'rel']}
+
+        sanitized_description = bleach.clean(
+            description, tags=allowed_tags, attributes=allowed_attrs)
+
+        return sanitized_description
+
 
 class UserForm(ModelForm):
+
     class Meta:
         model = User
         fields = ["first_name", "last_name", "email", "bio", "avatar",]
+
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get("avatar")
+        if not avatar:
+            return avatar
+
+        max_size = 2 * 1024 * 1024
+        if avatar.size > max_size:
+            raise ValidationError("Avatar file size must be under 2MB.")
+
+        valid_mime_types = ['image/jpeg', 'image/png', 'image/webp']
+        if avatar.content_type not in valid_mime_types:
+            raise ValidationError("Only JPG, PNG, or WebP files are allowed.")
+
+        return avatar
+
+    def clean_bio(self):
+        bio = self.cleaned_data.get("bio", "")
+        return bleach.clean(bio, tags=["p", "b", "i", "ul", "li", "a"], attributes={"a": ["href", "rel"]})
