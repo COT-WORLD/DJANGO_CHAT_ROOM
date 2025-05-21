@@ -40,7 +40,7 @@
                     <img src="{{ request.user.avatar.url }}" alt="Avatar" class="img-thumbnail mb-2" style="width: 120px; height: 120px; border-radius: 50%;">
                 {% endif %}
                 <label for="avatar">Avatar</label>
-                <input type="file" name="avatar" class="form-control" id="avatar"/>
+                <input type="file" name="avatar" class="form-control" id="avatar" accept="image/png,image/jpeg,image/webp"/>
                 {{ form.avatar.errors }}
             </div>
             <button type="submit" class="btn-login">

@@ -44,6 +44,7 @@ class RoomForm(ModelForm):
 
 
 class UserForm(ModelForm):
+    avatar = forms.FileField(required=False)
 
     class Meta:
         model = User
