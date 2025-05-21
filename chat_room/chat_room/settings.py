@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
-DEBUG = os.environ.get("DEBUG", "")
+DEBUG = DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 
@@ -31,7 +31,6 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'debug_toolbar',
 ]
 
 AUTH_USER_MODEL = 'chat.User'
@@ -39,7 +38,6 @@ AUTH_USER_MODEL = 'chat.User'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.gzip.GZipMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -116,12 +114,18 @@ if DEBUG:
     SECURE_SSL_REDIRECT = False
     SECURE_HSTS_SECONDS = 0
     CORS_ALLOW_ALL_ORIGINS = True
+    INSTALLED_APPS += ['debug_toolbar']
+    MIDDLEWARE.insert(2, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+    INTERNAL_IPS = [
+        "127.0.0.1",
+        "localhost",
+    ]
 else:
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    CORS_ALLOWED_ORIGINS = ["https://django-chat-room.onrender.com/",]
+    CORS_ALLOWED_ORIGINS = ["https://django-chat-room.onrender.com"]
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 AUTHENTICATION_BACKENDS = [
@@ -154,8 +158,3 @@ CLOUDINARY_STORAGE = {
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
-
-INTERNAL_IPS = [
-    "127.0.0.1",
-    "localhost",
-]
