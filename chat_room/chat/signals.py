@@ -8,8 +8,7 @@ from chat.models import Topic, Room, Message
 from faker import Faker
 import os
 import random
-from django.contrib.auth import get_user_model
-
+from dummy_text_generator import generate_sentence
 fake = Faker()
 User = get_user_model()
 
@@ -30,7 +29,6 @@ def initialize_project_data(sender, **kwargs):
 
 
 def setup_google_social_app_and_superuser():
-
     domain = os.environ.get("APP_DOMAIN", "localhost:8000")
     site, _ = Site.objects.get_or_create(
         id=settings.SITE_ID,
@@ -52,10 +50,16 @@ def setup_google_social_app_and_superuser():
 
     # Create superuser if not exists
     if not User.objects.filter(email=os.environ["DJANGO_SUPER_USER_EMAIL"]).exists():
+        bio = generate_sentence(lang='en', topic=random.choice([
+            "technology", "programming", "software development", "education"
+        ]))
         User.objects.create_superuser(
             username=os.environ["DJANGO_SUPER_USER_USERNAME"],
+            first_name=os.environ["DJANGO_SUPER_USER_USERNAME"],
+            last_name=os.environ["DJANGO_SUPER_USER_USERNAME"],
             email=os.environ["DJANGO_SUPER_USER_EMAIL"],
             password=os.environ["DJANGO_SUPER_USER_PASSWORD"],
+            bio=bio,
         )
 
 
@@ -68,9 +72,9 @@ def seed_initial_data():
     print("🌱 Seeding topics...")
     topics = create_topics()
     print("🏗 Creating rooms...")
-    rooms, room_participant_map = create_rooms(users, topics)
+    rooms = create_rooms(users, topics)
     print("💬 Creating messages...")
-    create_messages(room_participant_map)
+    add_messages_and_participants(rooms, users)
     print("✅ Seeding completed.")
 
 
@@ -78,15 +82,21 @@ def create_users():
     users = []
     for name in USER_NAMES:
         if not User.objects.filter(username=name.lower()).exists():
+            bio = generate_sentence(lang='en', topic=random.choice([
+                "technology", "programming", "software development", "education"
+            ]))
             user = User.objects.create_user(
                 username=name.lower(),
                 first_name=name,
+                last_name=name,
                 email=f"{name.lower()}@gmail.com",
                 password="password123"
             )
-            user.bio = fake.sentence()
+            user.bio = bio
             user.save()
             users.append(user)
+        else:
+            users.append(User.objects.get(username=name.lower()))
     return users
 
 
@@ -98,8 +108,6 @@ def create_topics():
 
 def create_rooms(users, topics):
     rooms = []
-    room_participant_map = {}
-
     for i, user in enumerate(users):
         topic = random.choice(topics)
         room = Room(
@@ -109,51 +117,49 @@ def create_rooms(users, topics):
             description=f"Discussion on {topic.name.lower()} and its applications.",
         )
         rooms.append(room)
-
     Room.objects.bulk_create(rooms)
-    created_rooms = list(Room.objects.all())[-len(rooms):]
+    # Return only newly created rooms
+    return list(Room.objects.all())[-len(rooms):]
 
+
+def add_messages_and_participants(rooms, users):
     through_model = Room.participants.through
     through_entries = []
-
-    for room in created_rooms:
-        host = room.host
-        participants = random.sample(
-            [u for u in users if u.id != host.id], k=random.randint(2, 5)
-        )
-        full_participants = participants + [host]
-        room_participant_map[room.id] = full_participants
-
-        for user in full_participants:
-            through_entries.append(through_model(
-                user_id=user.id, room_id=room.id))
-
-    through_model.objects.bulk_create(through_entries)
-    return created_rooms, room_participant_map
-
-
-def create_messages(room_participant_map):
     messages = []
-    through_model = Room.participants.through
-    extra_through_entries = []
 
-    for room_id, participants in room_participant_map.items():
-        for _ in range(random.randint(3, 7)):
-            user = random.choice(participants)
-            msg_body = fake.sentence(nb_words=15)
-            tag = "(by room creator)" if user.id == participants[-1].id else "(by participant)"
+    for room in rooms:
+        # Always include the host as a participant and message writer
+        participants = set([room.host])
 
-            if not through_model.objects.filter(user_id=user.id, room_id=room_id).exists():
-                extra_through_entries.append(
-                    through_model(user_id=user.id, room_id=room_id)
-                )
-                room_participant_map[room_id].append(user)
+        # Randomly select other users (excluding host) as message writers/participants
+        num_other_participants = random.randint(2, 5)
+        other_participants = random.sample(
+            [u for u in users if u != room.host], k=num_other_participants
+        )
+        participants.update(other_participants)
 
-            messages.append(
-                Message(user_id=user.id, room_id=room_id,
-                        body=f"{msg_body} {tag}")
+        # Guarantee host writes at least one message
+        host_message = generate_sentence(lang='en', topic=room.topic.name)
+        messages.append(
+            Message(user_id=room.host.id, room_id=room.id, body=host_message)
+        )
+        through_entries.append(
+            through_model(user_id=room.host.id, room_id=room.id)
+        )
+
+        # Each other participant writes 1-3 messages
+        for participant in other_participants:
+            through_entries.append(
+                through_model(user_id=participant.id, room_id=room.id)
             )
+            num_messages = random.randint(1, 3)
+            for _ in range(num_messages):
+                message_body = generate_sentence(
+                    lang='en', topic=room.topic.name)
+                messages.append(
+                    Message(user_id=participant.id,
+                            room_id=room.id, body=message_body)
+                )
 
-    through_model.objects.bulk_create(
-        extra_through_entries, ignore_conflicts=True)
+    through_model.objects.bulk_create(through_entries, ignore_conflicts=True)
     Message.objects.bulk_create(messages)
