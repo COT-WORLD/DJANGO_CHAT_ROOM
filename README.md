@@ -28,6 +28,7 @@ For testing purposes, you can use the following credentials to log in:
 - [Google SSO & Superuser Automation](#google-sso--superuser-automation)
 - [Production Gzip Compression](#production-gzip-compression)
 - [Cloudinary File Upload](#cloudinary-file-upload)
+- [CI/CD Pipeline](#cicd-pipeline)
 - [Security Features and OWASP Top 10 Tests](#security-features-and-owasp-top-10-tests)
 - [Errors](#errors)
 - [Contributing](#contributing)
@@ -45,6 +46,8 @@ For testing purposes, you can use the following credentials to log in:
 - **Room Search**: Easily find study rooms by searching for topics.
 - **Automated Setup**: Google OAuth app and superuser account are auto-setup using Django signals.
 - **Cloudinary File Upload**: Integration with Cloudinary for seamless media file uploads (images).
+- **GitHub Actions**: Automated testing and deployment pipelines.
+- **Render**: Cloud platform for deploying the application.
 - **OWASP Top 10 Security Features**: Implementation of critical security features to mitigate OWASP Top 10 vulnerabilities, including protection against SQL Injection, Cross-Site Scripting (XSS), Cross-Site Request Forgery (CSRF), and others.
 
 ---
@@ -184,6 +187,18 @@ This ensures all static assets like CSS/JS are served compressed with .gz and .b
 
 Cloudinary is used for handling file uploads (images, videos, etc.) in the Django Chat Room application. Cloudinary helps in efficiently storing, optimizing, and delivering media files. Media files are automatically optimized and served through Cloudinary’s global CDN.
 
+## CI/CD Pipeline
+
+This project uses GitHub Actions for automated testing and deployment:
+
+1. **Continuous Integration (CI)**:
+
+   - Runs tests on every push or pull request.
+   - Ensures code quality and reliability.
+
+2. **Continuous Deployment (CD)**:
+   - Deploys the application to Render after successful tests.
+
 ## Security Features and OWASP Top 10 Tests
 
 The application is designed with robust security measures in mind. Various OWASP Top 10 security vulnerabilities have been addressed through the following features:
@@ -220,6 +235,6 @@ Site matching query does not exist: Make sure SITE_ID matches the ID of the auto
 
 Google SocialApp not found: Double-check your .env values for CLIENT_ID and CLIENT_SECRET.
 
-## Contributing
+## 👨‍💻 Author
 
-Feel free to fork and submit pull requests. If you'd like to collaborate, open an issue to discuss your feature idea or bug fix.
+COT_WORLD: A passionate software developer who loves building scalable and efficient applications. Connect with me on [LinkedIn](https://www.linkedin.com/in/hardik-chaudhary/).
